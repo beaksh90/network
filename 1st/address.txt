@@ -1,0 +1,12 @@
+포트
+IP
+MAC
+
+ETH |  IP  | TCP | HTTP
+ETH |  IP  | TCP | HTTP
+
+MAC    IP    Port
+
+48bit   32bit  16bit
+
+16진수 10진수 10진수

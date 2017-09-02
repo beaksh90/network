@@ -1,0 +1,10 @@
+﻿블로그 net123.tistory.com
+
+강사 김 정 우
+
+연락처 010 9902 9710
+
+CCNA  +             CCNP
+
+1,2,3,4,5            CCNP ROUTE, CCNP SWITCH, CCNP TSHOOT
+                       2,3               4,5                2,3,4,5  장애처리

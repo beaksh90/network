@@ -1,0 +1,17 @@
+SYSLOG_REG_PAT__-__.*(fw4_allow|fw4_deny|fw4_common)\]\s\[\]([^\,]+),[^\,]+,[^\,]+,([^\,]+),([^\,]+),[^\,]+,([^\-]+),,([^\,]+),([^\,]+),([^\,]+),(TCP|UDP|IGMP),.*
+SYSLOG_ICMP_PAT__-__.*(fw4_allow|fw4_deny|fw4_common)\]\s\[\]([^\,]+),[^\,]+,[^\,]+,([^\,]+),([^\,]+),[^\,]+,([^\,]+),,-,([^\,]+),([^\,]+),(ICMP),.*
+DEVICE_ID_REG__-__3
+START_TIME_REG__-__2
+PROTOCOL_REG__-__9
+GUID_REG__-__4
+SOURCE_REG__-__5
+SOURCE_PORT_REG__-__6
+DESTINATION_REG__-__7
+DESTINATION_PORT_REG__-__8
+
+DEVICE_ID_ICMP__-__3
+START_TIME_ICMP__-__2
+GUID_ICMP__-__4
+SOURCE_ICMP__-__5
+DESTINATION_ICMP__-__6
+TYPE_ICMP__-__7

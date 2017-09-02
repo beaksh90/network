@@ -1,0 +1,26 @@
+System Ports (0 - 1023) : 서비스를 하기 위해서 예약된 포트 번호 ( Well-Known Port 번호)
+
+http	 80
+https 	443
+telnet	 23
+ssh 	22
+ftp  	21
+ftp-data	20
+smtp 	25
+pop3 	110
+tftp 	69
+bootps(srv) 67
+bootps(cli)  68
+domain 	53
+snmp  	161 
+syslog 	514
+ntp 	119
+
+
+User Ports ( 1024 - 49151 ) :
+
+Dynamic and/or Private Ports (49152-65535) :
+
+------------------------
+dns ip 알아내는법 ( wins )
+nslookup www.google.co.kr
