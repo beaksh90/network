@@ -1,0 +1,41 @@
+[참고] 와이어셔크 필터 
+
+ip.addr == 172.16.5.254
+ip.addr == 172.16.5.254 && tcp
+ip.addr == 172.16.5.254 && tcp.port eq 80
+ip.addr == 172.16.5.254 && tcp.flags eq 0x02 
+ip.addr == 172.16.5.254 && tcp.flags eq 0x12
+ip.addr == 172.16.5.254 && tcp.flags eq 0x10
+
+ip.addr == 172.16.5.254 || tcp.port eq 80
+
+
+ip.src == 172.16.5.254
+ip.dst == 172.16.5.254
+ip.src == 172.16.5.254 && udp
+ip.src == 172.16.5.254 && udp.port eq 53
+
+ip.addr == 172.16.5.254 && udp.port eq 53
+
+
+!arp
+ip.addr == 172.16.5.254 && ip && !arp && !tcp && !udp 
+
+
+icmp
+icmp[0] == 8	
+icmp.type eq 8
+
+icmp[0] == 0 
+icmp.type eq 0
+
+
+eth.dst eq ff:ff:ff:ff:ff:ff
+arp.src.hw_mac == 00:07:70:a1:3c:02
+
+http.host eq lm3.cafe.naver.com && tcp
+
+
+
+
+
