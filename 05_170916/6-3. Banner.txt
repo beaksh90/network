@@ -1,0 +1,14 @@
+###########################################################
+       
+                     !!!!! WARNING !!!!!
+
+   Access to this computer system and associated network, computer resources,
+               or data is restricted to authorized individual.
+    This computer and related networks, resources or data may only be used
+            for business purpose of our company and its customers.
+      Use by unauthorized individual or for an unauthorized purpose is 
+      a violation of our Security Policy. Violators will be prosecuted.
+
+                             !!!!! WARNING !!!!!
+
+###########################################################

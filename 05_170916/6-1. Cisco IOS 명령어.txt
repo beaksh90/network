@@ -1,0 +1,335 @@
+@ Cisco IOS 명령어
+
+1. 명령 프롬프트
+
+Router>			User Mode : 라우터 접속 초기 프롬프트
+
+Router>enable
+
+Router#			Privilege Exec Mode : 관리자 모드
+			
+			- show 	: 정적 정보 확인
+			- debug	: 동적 정보 확인
+			- copy	: 저장, 복사
+			- erase	: 삭제
+			- reload	: 재부팅
+			- ping	: ping 테스트
+			- telnet	: 텔넷 접속
+
+Router#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+Router(config)#
+Router(config)#		Global Configration Mode : 설정 모드
+
+
+2. 라우터 호스트 네임 설정
+
+ - R1 설정을 참조하여 R2와 R3에도 설정을 실시한다. 
+
+Router(config)#hostname ABC
+ABC(config)#
+ABC(config)#no hostname ABC
+Router(config)#
+Router(config)#hostname HQ
+HQ(config)#
+HQ(config)#hostname R1
+R1(config)#
+
+
+
+3. RAM & NVRAM
+
+ 1) RAM
+
+  - 라우터가 동작하기 위해서 사용하는 메모리
+  - 라우터 설정이 자동으로 저장되어 동작 실시
+  - 저장된 설정 파일 : 'running-config'
+  - 정보 확인 : show running-config -> show run
+  - RAM에 저장된 내용들은 라우터가 재부팅되면 초기화됨
+
+ 2) NVRAM 
+
+  - RAM 'running-config' 파일을 저장하여 보관하는 메모리
+  - 라우터가 부팅될때, 마지막에 참조하여 설정 내용을 RAM 'running-config'로 복원시킴
+  - 저장된 설정 파일 : 'startup-config'
+  - 정보 확인 : show startup-config -> show start
+  - NVRAM에 저장된 내용들은 라우터가 재부팅되면 초기화 안됨
+
+ 3) RAM 'running-config' -> NVRAM 'startup-config' 저장 명령어
+
+R1#copy running-config startup-config -> copy run start
+
+ 4)  NVRAM 'startup-config' 삭제 명령어
+
+R1#erase startup-config -> erase start
+
+
+4. DNS 요청 X, 콘솔 종료 X, 라인 정리 기능
+
+R1#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R1(config)#
+R1(config)#no ip domain-lookup <- DNS 요청 X
+R1(config)#
+R1(config)#line con 0
+R1(config-line)#exec-timeout 30 30 <- 30분 30초동안 입력 없으면 콘솔 종료
+R1(config-line)#
+R1(config-line)#exec-timeout 0 0 <- 콘솔 종료 X
+R1(config-line)#
+R1(config-line)#logg syn <---------- 라인 자동 정리 기능
+R1(config-line)#
+R1(config-line)# Ctrl+Z
+R1#
+
+
+Ex) R1 설정을 참조하여 R2와 R3에도 설정을 실시한다. 
+
+Router>enable
+Router#conf t
+Router(config)#hostname R1
+R1(config)#no ip domain-lookup
+R1(config)#line con 0
+R1(config-line)#exec-timeout 0 0
+R1(config-line)#logg syn
+R1(config-line)#end
+R1#
+R1#show run
+
+
+5. 라우터 패스워드 설정
+
+ - R1 설정을 참조하여 R2와 R3에도 설정을 실시한다. 
+
+R1#conf t
+R1(config)#
+R1(config)#enable secret cisco
+R1(config)#enable password cisco1234
+R1(config)#
+R1(config)#line con 0
+R1(config-line)#password ciscocon
+R1(config-line)#login
+R1(config-line)#
+R1(config-line)#line aux 0
+R1(config-line)#password ciscoaux
+R1(config-line)#login
+R1(config-line)#
+R1(config-line)#line vty 0 4
+R1(config-line)#password ciscovty
+R1(config-line)#login
+R1(config-line)#end
+R1#
+R1#show run
+
+ - 패스워드 설정 테스트
+
+R1#exit
+
+R1 con0 is now available
+
+Press RETURN to get started.
+
+
+User Access Verification
+
+Password:   <---- ciscocon
+
+R1>
+R1>en
+Password:  <----- cisco
+R1#
+
+
+6. 패스워드 문자 암호화 실시
+
+
+R1#sh run
+Building configuration...
+
+Current configuration : 790 bytes
+!
+version 12.2
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname R1
+!
+!
+!
+enable secret 5 $1$mERr$hx5rVt7rPNoS4wqbXKX7m0
+enable password cisco1234
+
+~ 중간 생략 ~
+
+line con 0
+ exec-timeout 0 0
+ password ciscocon
+ login
+!
+line aux 0
+ password ciscoaux
+ login
+!
+line vty 0 4
+ password ciscovty
+ login
+!
+!
+!
+end
+
+
+ - 패스워드 문자 암호화 실시
+
+R1#conf t
+R1(config)#service password-encryption
+R1(config)#end
+R1#
+
+
+- 패스워드 문자 암호화 확인
+
+R1#sh run 
+Building configuration...
+
+Current configuration : 824 bytes
+!
+version 12.2
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+service password-encryption
+!
+hostname R1
+!
+!
+!
+enable secret 5 $1$mERr$hx5rVt7rPNoS4wqbXKX7m0
+enable password 7 0822455D0A165445415F
+
+~ 중간 생략 ~
+
+line con 0
+ exec-timeout 0 0
+ password 7 0822455D0A1606181C
+ login
+!
+line aux 0
+ password ciscoaux
+ login
+!
+line vty 0 4
+ password 7 0822455D0A1613030B
+ login
+!
+!
+!
+end
+
+
+
+7. FastEthernet 0/0 인터페이스 설정
+
+ - R1 설정을 참조하여 R2와 R3에도 설정을 실시한다. 
+
+R1#conf t
+R1(config)#int fa0/0
+R1(config-if)#ip address 13.13.10.1 255.255.255.0
+R1(config-if)#no shutdown
+R1(config-if)#end
+R1#
+R1#show run
+R1#show ip int brief
+R1#show int fa0/0
+
+R1#ping 13.13.10.2
+R1#ping 13.13.10.3
+R1#show arp
+
+
+8. R1 S1/0 - R2 S1/1 인터페이스 설정
+
+		    "clock rate 1000000"
+     DTE                                 DCE
+R1[S1/0]--------HDLC---------[S1/1]R2
+
+R1#show int s1/0
+R1#show controllers s1/0
+Interface Serial1/0
+Hardware is PowerQUICC MPC860
+DTE V.35 TX and RX clocks detected
+---------- 확인
+
+R2#show int s1/1
+R2#show controllers s1/1
+Interface Serial1/1
+Hardware is PowerQUICC MPC860
+DCE V.35, clock rate 2000000
+---------- 확인
+
+R1(config)#int s1/0
+R1(config-if)#ip address 13.13.12.1 255.255.255.0
+R1(config-if)#no shutdown
+R1(config-if)#end
+R1#
+R1#show run
+
+R2(config)#int s1/1
+R2(config-if)#ip address 13.13.12.2 255.255.255.0
+R2(config-if)#clock rate 1000000
+R2(config-if)#no shutdown
+R2(config-if)#end
+R2#
+R2#show run
+
+R1#show ip int brief
+R1#show int s1/0
+
+R2#show ip int brief
+R2#show int s1/1
+
+R1#ping 13.13.12.2
+
+R2#ping 13.13.12.1
+
+
+
+9. R2 S1/0 - R3 S1/1 인터페이스 설정
+
+"clock rate 1000000"
+     DCE                                DTE
+R2[S1/0]--------HDLC---------[S1/1]R3
+
+R2#show controllers s1/0
+Interface Serial1/0
+Hardware is PowerQUICC MPC860
+DCE V.35, clock rate 2000000
+
+R3#show controllers s1/1
+Interface Serial1/1
+Hardware is PowerQUICC MPC860
+DTE V.35 TX and RX clocks detected
+
+R2(config)#int s1/0
+R2(config-if)#ip address 13.13.23.2 255.255.255.0
+R2(config-if)#clock rate 1000000
+R2(config-if)#no shutdown
+R2(config-if)#end
+R2#
+R2#show run
+
+R3(config)#int s1/1
+R3(config-if)#ip address 13.13.23.3 255.255.255.0
+R3(config-if)#no shutdown
+R3(config-if)#end
+R3#
+R3#sh run
+
+R2#show ip int brief
+R2#show int s1/0
+
+R3#show ip int brief
+R3#show int s1/1
+
+R2#ping 13.13.23.3
+
+R3#ping 13.13.23.2

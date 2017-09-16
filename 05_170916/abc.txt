@@ -1,0 +1,69 @@
+Router >  enable         User mode     사용자모드
+
+
+
+Router # Privilge       Exec Mope       관리자 모드
+
+                        - 정보확인
+                        - 저장
+                        - 삭제
+                        - 재부팅
+                        - 테스트
+                        - 원격접속
+
+단축키
+
+Crtl + a : 커서 맨 앞으로
+Crtl + e : 커서 맨 뒤로 
+Crtl + x : 커서 앞쪽 글자들 삭제
+
+conf t
+ip route 13.13.30.0 255.255.255.0 s1/0
+ip route 13.13.30.0 255.255.255.0 s1/0
+ip route 13.13.20.0 255.255.255.0 s1/0
+ip route 13.13.23.0 255.255.255.0 s1/0
+ip route 172.16.3.0 255.255.255.0 s1/0
+end 
+
+
+R1
+conf t
+no ip route 13.13.30.0 255.255.255.0 Serial1/0 
+no ip route 13.13.20.0 255.255.255.0 Serial1/0 
+no ip route 13.13.23.0 255.255.255.0 Serial1/0 
+no ip route 172.16.3.0 255.255.255.0 Serial1/0 
+no ip route 0.0.0.0 0.0.0.0 Serial1/0 
+end
+R2
+conf t
+no ip route 13.13.30.0 255.255.255.0 13.13.23.3 
+no ip route 13.13.10.0 255.255.255.0 13.13.12.1 
+no ip route 172.16.3.0 255.255.255.0 13.13.23.3 
+no ip route 172.16.1.0 255.255.255.0 13.13.12.1 
+no ip route 168.126.63.0 255.255.255.0 Serial1/0 
+no ip route 211.241.228.160 255.255.255.240 Serial1/0 
+no ip route 198.133.219.64 255.255.255.224 Serial1/0 
+end
+
+R3
+conf t
+no ip route 13.13.10.0 255.255.255.0 13.13.23.2 
+no ip route 13.13.20.0 255.255.255.0 13.13.23.2 
+no ip route 13.13.12.0 255.255.255.0 13.13.23.2 
+no ip route 172.16.1.0 255.255.255.0 13.13.23.2 
+end
+
+
+
+198.133.219.161 255.255.255.240
+                          .0000 0000 2^8 = 256 - 240
+                                         = 16 * n
+                                         => 160
+
+
+conf t
+router rip
+version 2
+no auto-summary
+network 13.0.0.0
+end
