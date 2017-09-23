@@ -1,0 +1,85 @@
+@ 스위치 장비 특징
+
+1. 스위치
+
+ - Layer 2 계층 장비
+    
+    L2    L3   L4
+ - ETH | IP | TCP | HTTP
+   ------> MAC 주소 참조
+
+ - 'Mac Address-Table' 정보 참조
+
+
+2. 스위치 기본 동작 
+
+ - Learning	: MAC 주소 자동 학습 기능
+ - Flooding	: 브로드케스트 프레임을 수신하여 전체 포트로 프레임을 복제하여 전송하는 기능
+ - Forwarding	: 'mac address-table'을 참조하여 해당 포트로만 프레임을 전송하는 기능
+ - Aging		: 'mac address-table'에 등록된 MAC 정보를 갱신 및 삭제하는 타이머
+ - Filtering	: 프레임을 수신한 포트로 다시 프레임이 송신되지 않도록 차단하는 루프 방지 기능
+
+
+3. 트랜스패런트 브리징 기능
+
+ - 관리자가 참여하지 않아도 동작이 가능한 특성
+
+
+4. Switch 명령어
+
+en
+conf t
+!
+hostname 이름
+!
+enable secret cisco
+!
+no ip domain-lookup
+!
+line con 0
+ password ciscocon
+ login
+ exec-timeout 0 0
+ logg syn
+!
+line vty 0 15
+ password ciscovty
+ login
+!
+
+ 
+5. 스위치 관리자 IP 주소 설정
+
+ - 기본적으로 VLAN 1 인터페이스에 IP 주소를 설정하여 관리용으로 사용한다.
+
+@ SW1
+
+int vlan 1
+ ip address 192.168.1.1 255.255.255.0
+ no shutdown
+!
+ip default-gateway 192.168.1.254
+
+@ SW2
+
+int vlan 1
+ ip address 192.168.1.2 255.255.255.0
+ no shutdown
+!
+ip default-gateway 192.168.1.254
+
+SW1,SW2#show run
+SW1,SW2#show ip int brief
+SW1#ping 192.168.1.254
+SW1#ping 192.168.1.102
+
+
+
+
+
+
+
+
+
+
+

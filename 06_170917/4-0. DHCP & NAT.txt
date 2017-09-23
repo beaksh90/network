@@ -1,0 +1,339 @@
+1. DHCP(Dynamic Host Configuration Protocol)
+
+ - IP 주소 자동 할당 기능을 수행하는 네트워크 서비스
+ - 서버와 클라이언트간에 IP 주소 임대 서비스
+ - DHCP 구성 요소 : 서버, 클라이언트, DHCP Relay Agent
+ - DHCP 동작 과정 : 4개 메세지를 이용하여 4단계 진행
+
+ 1) DHCP 동작 단계
+
+SA 68					SA 67
+DA 67					DA 68
+----------------- UDP			----------------- UDP
+SA 0.0.0.0					SA 192.168.1.254
+DA 255.255.255.255				DA 255.255.255.255
+----------------- IP				----------------- IP
+		
+클라이언트(UDP 68)				서버(UDP 67)
+0.0.0.0					192.168.1.254
+
+Discover ---------------------------------->
+(서버 찾기)	<-------------------------------- Offer
+					(IP 주소 정보 할당)
+Request ---------------------------------->
+(IP 할당 요청)	<-------------------------------- Ack
+					(IP 할당 승인)				
+
+
+ 2) DHCP 서버에 설정할 내용
+
+	- IP 주소 정보
+	- 서브넷 마스크
+	- 기본 게이트웨이
+	- DNS 서버 주소 정보
+	- 임대 기간
+
+
+[실습] @DHCP&NAT 예제(기본 설정 완료).pkt
+
+Ex1) R1에서 DHCP 서버를 구성하여, A~C PC에게 IP 주소 정보를 할당하도록 한다.
+
+	- 제외 IP 주소 범위		: 192.168.1.253, 192.168.1.254
+	- IP 주소 정보		: 192.168.1.0 (192.168.1.1~ 192.168.1.254)
+	- 서브넷 마스크		: 255.255.255.0	
+	- 기본 게이트웨이		: 192.168.1.254
+	- DNS 서버 주소 정보	: 192.168.1.253
+	- 임대 기간		: 무제한
+
+@ R1
+
+ip dhcp excluded-address 192.168.1.253 192.168.1.254 
+!
+ip dhcp pool Local-192
+ network 192.168.1.0 255.255.255.0
+ default-router 192.168.1.254
+ dns-server 192.168.1.253
+ lease infinite
+
+ - A~C 에서 'dhcp'를 클릭한다.
+
+
+R1#show ip dhcp binding 
+IP address       Client-ID/              Lease expiration        Type
+                 Hardware address
+192.168.1.1      00D0.BCB4.E4E4           --                     Automatic
+192.168.1.2      0090.216A.0A2D           --                     Automatic
+192.168.1.3      0060.5C84.02D1           --    
+
+R1#ping 192.168.1.1
+R1#ping 192.168.1.2
+R1#ping 192.168.1.3
+
+
+Ex2) R1에서 DHCP 서버를 구성하여, X~Z PC에게 IP 주소 정보를 할당하도록 한다.
+
+	- 제외 IP 주소 범위		: 198.133.219.25, 198.133.219.254
+	- IP 주소 정보		: 198.133.219.0 (198.133.219.1 ~ 198.133.219.254)
+	- 서브넷 마스크		: 255.255.255.0	
+	- 기본 게이트웨이		: 198.133.219.254
+	- DNS 서버 주소 정보	: 198.133.219.25
+	- 임대 기간		: 무제한
+
+@ R1
+
+ip dhcp excluded-address 198.133.219.25 
+ip dhcp excluded-address 198.133.219.254
+!
+ip dhcp pool Remote-198
+ network 198.133.219.0 255.255.255.0
+ default-router 198.133.219.254
+ dns-server 198.133.219.25
+ lease infinite
+
+
+
+
+
+@ R3 (DHCP Relay Agent)
+
+int fa0/0
+ ip helper-address 13.13.12.1
+
+
+ - X~Z에서 'dhcp'를 클릭한다.
+
+R1#show ip dhcp binding 
+IP address       Client-ID/              Lease expiration        Type
+                 Hardware address
+192.168.1.1      00D0.BCB4.E4E4           --                     Automatic
+192.168.1.2      0090.216A.0A2D           --                     Automatic
+192.168.1.3      0060.5C84.02D1           --                     Automatic
+198.133.219.1    0006.2A9C.CD45           --                     Automatic
+198.133.219.2    00D0.583B.8398           --                     Automatic
+198.133.219.3    00D0.FF88.676D           --                     Automatic
+
+R3#ping 198.133.219.1
+R3#ping 198.133.219.2
+R3#ping 198.133.219.3
+
+
+
+Ex3) ISP 라우터에서 DHCP 서버를 구성하여, R3 F0/1에 IP 주소 정보를 할당하도록 한다.
+
+	제외 IP 주소 범위	: 13.13.111.254
+	IP 주소 정보	: 13.13.111.0 (13.13.111.1 ~ 13.13.111.254)
+	서브넷 마스크	: 255.255.255.0	
+	기본 게이트웨이	: 13.13.111.254
+	DNS 서버 주소 정보	: 168.126.63.1
+	임대 기간		: 무제한
+
+@ ISP
+
+int fa0/1
+ ip address 13.13.111.254 255.255.255.0
+ no shutdown
+!
+ip dhcp excluded-address 13.13.111.254
+!
+ip dhcp pool NET-13
+ network 13.13.111.0 255.255.255.0
+ default-router 13.13.111.254
+ dns-server 168.126.63.1
+ lease infinite
+
+@ R3
+
+int fa0/1
+ ip address dhcp
+ no shutdown
+
+
+R3#sh ip int brief
+Interface              IP-Address      OK? Method Status                Protocol
+ 
+FastEthernet0/0        198.133.219.254 YES manual up                    up
+FastEthernet0/1        13.13.111.1     YES DHCP   up                    up
+Serial1/0              unassigned      YES unset  administratively down down
+Serial1/1              13.13.23.3      YES manual up                    up
+Serial1/2              unassigned      YES unset  administratively down down
+Serial1/3              unassigned      YES unset  administratively down down
+
+R3#show ip route
+
+Gateway of last resort is 13.13.111.254 to network 0.0.0.0
+
+     13.0.0.0/24 is subnetted, 3 subnets
+D       13.13.12.0 [90/2681856] via 13.13.23.2, 02:10:48, Serial1/1
+C       13.13.23.0 is directly connected, Serial1/1
+C       13.13.111.0 is directly connected, FastEthernet0/1
+C    198.133.219.0/24 is directly connected, FastEthernet0/0
+S*   0.0.0.0/0 [254/0] via 13.13.111.254
+
+
+R3#show dhcp lease 
+Temp IP addr: 13.13.111.1 for peer on Interface: FastEthernet0/1
+Temp sub net mask: 255.255.255.0
+   DHCP Lease server: 13.13.111.254 , state: Bound
+   DHCP Transaction id: 9A1B476A
+   Lease: 86400 secs,  Renewal: 43200 secs,  Rebind: 75600 secs
+Temp default-gateway addr: 13.13.111.254
+   Next timer fires after: 11:50:32
+   Retry count: 0  Client-ID:cisco-000B.BE48.BCE6-FastEthernet0/1
+   Hostname: R3
+
+
+ISP#sh ip dhcp binding 
+IP address       Client-ID/              Lease expiration        Type
+                 Hardware address
+13.13.111.1      000B.BE48.BCE6           --                     Automatic
+
+
+ - NAT 설정을 하기 이전에 R3 F0/1를 shutdown 한다
+
+R3(config)#int fa0/1
+R3(config-if)#shutdown
+
+
+[참고] 클라이언트에게 특정 IP 주소 할당
+
+DHCP 서버		         DHCP 클라이언트
+R1[F0/1]--------------------------[F0/1]R2
+    192.168.1.254
+
+@ R1
+
+ip dhcp pool 1
+   host 192.168.1.200 255.255.255.0
+   client-identifier 01c0.011b.6800.01     (맨 앞에 01는 클라이언트가 이더넷 장치라는 16진수 값)
+   default-router 192.168.1.254 
+   dns-server 168.126.63.1 
+   domain-name cisco.com
+
+@ R2
+
+int fa0/1
+ ip address dhcp client-id fa0/1 hostname R2
+ no shutdown
+
+
+---------------------------------------------------------------------------------------------------------------
+@ NAT (Network Address Translation)
+
+ - IP 주소를 변환하는 네트워크 서비스
+ - NAT 목적 : 보안 & IP 주소 고갈 문제 해결
+ - NAT는 내부에서 외부로 패켓을 전송하기 위해서 설정하는 것이 아니라, 내부에서 외부로 전송된 패켓이 다시
+   되돌아올 수 있도록 하기 위해서 구성하는 것이다.
+
+ 1) NAT 구성 요소
+
+	- Inside(내부, 사설 IP 환경) / Outside(외부, 공인 IP 환경)
+
+	- Inside Local 주소 (Inside 내부에서 사용하는 주소, 사설 IP 주소)
+	- Inside Global 주소 (Inside 내부에서 외부로 패켓을 전송할때, 변환되는 주소, 공인 IP 주소)
+
+	- Inside -> Outside로 패켓이 전송될때	: 출발지 주소 변경
+	- Outside ->Inside로 패켓이 전송될때	: 목적지 주소 변경
+
+
+
+
+ 2) 동적 NAT
+
+ - 사용자 대상으로 NAT를 동적으로 구성하는 방법
+
+Ex) 동적 NAT
+
+ - Inside Local	: 192.168.1.0/24 (192.168.1.1 ~ 192.168.1.254)
+ - Inside Global	: 13.13.12.1/24
+
+@ R1
+
+access-list 10 permit 192.168.1.0 0.0.0.255
+!
+ip nat inside source list 10 interface s1/0 overload
+!
+int fa0/0
+ ip nat inside
+!
+int s1/0
+ ip nat outside
+!
+
+
+R1#debug ip nat
+IP NAT debugging is on
+
+ - A~C PC에서 Web Brower -> www.xyz.com 실시
+
+R1#show ip nat translations 
+Pro  Inside global     Inside local       Outside local      Outside global
+tcp 13.13.12.1:1025    192.168.1.1:1025   198.133.219.25:80  198.133.219.25:80
+tcp 13.13.12.1:1026    192.168.1.1:1026   198.133.219.25:80  198.133.219.25:80
+tcp 13.13.12.1:1027    192.168.1.1:1027   198.133.219.25:80  198.133.219.25:80
+tcp 13.13.12.1:1024    192.168.1.2:1025   198.133.219.25:80  198.133.219.25:80
+tcp 13.13.12.1:1028    192.168.1.3:1025   198.133.219.25:80  198.133.219.25:80
+
+
+A_PC>ping 198.133.219.25
+
+Pinging 198.133.219.25 with 32 bytes of data:
+
+Reply from 198.133.219.25: bytes=32 time=2ms TTL=125
+Reply from 198.133.219.25: bytes=32 time=11ms TTL=125
+Reply from 198.133.219.25: bytes=32 time=2ms TTL=125
+Reply from 198.133.219.25: bytes=32 time=2ms TTL=125
+
+Ping statistics for 198.133.219.25:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 2ms, Maximum = 11ms, Average = 4ms
+
+
+R1#show ip nat translations 
+Pro  Inside global     Inside local       Outside local      Outside global
+icmp 13.13.12.1:10     192.168.1.1:10     198.133.219.25:10  198.133.219.25:10
+icmp 13.13.12.1:11     192.168.1.1:11     198.133.219.25:11  198.133.219.25:11
+icmp 13.13.12.1:8      192.168.1.1:8      198.133.219.25:8   198.133.219.25:8
+icmp 13.13.12.1:9      192.168.1.1:9      198.133.219.25:9   198.133.219.25:9
+tcp 13.13.12.1:1025    192.168.1.1:1025   198.133.219.25:80  198.133.219.25:80
+tcp 13.13.12.1:1026    192.168.1.1:1026   198.133.219.25:80  198.133.219.25:80
+tcp 13.13.12.1:1027    192.168.1.1:1027   198.133.219.25:80  198.133.219.25:80
+tcp 13.13.12.1:1024    192.168.1.2:1025   198.133.219.25:80  198.133.219.25:80
+tcp 13.13.12.1:1028    192.168.1.3:1025   198.133.219.25:80  198.133.219.25:80
+
+
+
+3) 정적 NAT
+
+ - 서버 대상으로 NAT를 정적으로 구성하는 방법(단, 특정 사용자 시스템도 가능)
+
+Ex) 정적 NAT
+
+ - Inside Local	: 192.168.1.253 <-- HTTP 서버
+ - Inside Global	: 13.13.12.100
+
+@ R1
+
+ip nat inside source static tcp 192.168.1.253 80 13.13.12.100 80
+!
+int fa0/0
+ ip nat inside
+!
+int s1/0
+ ip nat outside
+!
+
+
+ - X PC에서 Web Brower -> 13.13.12.100 실시
+
+X_PC>ping 13.13.12.100
+
+Pinging 13.13.12.100 with 32 bytes of data:
+
+Request timed out.
+Request timed out.
+Request timed out.
+Request timed out.
+
+Ping statistics for 13.13.12.100:
+    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss),

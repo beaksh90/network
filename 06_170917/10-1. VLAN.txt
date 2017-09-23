@@ -1,0 +1,284 @@
+@ Lan Switching - 03. VLAN
+
+1. VLAN(Virtual LAN)
+
+ - 스위치에서 가상으로 LAN을 분리하는 기능
+ - VLAN 목적
+
+   논리적으로 브로드케스트 도메인을 분할하여, 브로드케스트 양 최소화
+   서로 다른 VLAN 간에 ARP 요청이 안되기 때문에 유니케스트 접근 제어 가능
+   논리적인 방법으로 브로드케스트 도메인을 분할하기 때문에 관리상 효율적
+
+
+Ex) 학원 VLAN 설계 및 구성
+
+A Class vlan 11
+B Class vlan 12
+C Class vlan 13 
+D Class vlan 14
+
+
+
+[실습] '@Inter-VLAN 실습.pkt' 파일
+
+
+2. VLAN Database 
+
+ - VLAN 정보는 VLAN Database로 관리한다.
+ - 모든 포트는 VLAN 1에 소속되어 있기 때문에, 브로드케스트를 전체 공유한다.
+ - vlan 1, vlan 1002~1005는 기본 VLAN이기 때문에 삭제 및 수정이 불가능하다.
+
+
+SW1#show vlan brief
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Fa0/1, Fa0/2, Fa0/3, Fa0/4
+                                                Fa0/5, Fa0/6, Fa0/7, Fa0/8
+                                                Fa0/9, Fa0/10, Fa0/11, Fa0/12
+                                                Fa0/13, Fa0/14, Fa0/15, Fa0/16
+                                                Fa0/17, Fa0/18, Fa0/19, Fa0/20
+                                                Fa0/21, Fa0/22, Fa0/23, Fa0/24
+                                                Gig0/1, Gig0/2
+1002 fddi-default                     active    
+1003 token-ring-default               active    
+1004 fddinet-default                  active    
+1005 trnet-default                    active  
+
+
+
+3. VLAN 생성
+
+ - SW1, SW2에서 vlan 11, vlan 12, vlan 13을 생성하도록 한다.
+
+SW1#conf t
+SW1(config)#vlan 11
+SW1(config-vlan)#name VLAN_A
+SW1(config-vlan)#
+SW1(config-vlan)#vlan 12
+SW1(config-vlan)#name VLAN_B
+SW1(config-vlan)#
+SW1(config-vlan)#vlan 13
+SW1(config-vlan)#name VLAN_C
+SW1(config-vlan)#end
+
+SW1#show vlan brief
+
+
+
+4. VLAN Access 설정
+
+ - SW1 VLAN Access 실시
+
+vlan 11 - f0/1
+vlan 12 - f0/2
+
+
+SW1#conf t
+SW1(config)#int fa0/1
+SW1(config-if)#switchport mode access
+SW1(config-if)#switchport access vlan 11
+SW1(config-if)#
+SW1(config-if)#int fa0/2
+SW1(config-if)#switchport mode access
+SW1(config-if)#switchport access vlan 12
+SW1(config-if)#end
+
+SW1#show run
+SW1#show vlan brief
+
+
+ - SW2 VLAN Access 실시
+
+vlan 11 - f0/3
+vlan 12 - f0/4
+vlan 13 - f0/5
+
+SW2#conf t
+SW2(config)#int fa0/3
+SW2(config-if)#switchport mode access
+SW2(config-if)#switchport access vlan 11
+SW2(config-if)#
+SW2(config-if)#int fa0/4
+SW2(config-if)#switchport mode access
+SW2(config-if)#switchport access vlan 12
+SW2(config-if)#
+SW2(config-if)#int fa0/5
+SW2(config-if)#switchport mode access
+SW2(config-if)#switchport access vlan 13
+SW2(config-if)#end
+
+SW2#show run
+SW2#show vlan brief
+
+
+
+5. 트렁크 구성
+
+ - 트렁크란 하나의 링크를 이용하여 서로 다른 VLAN 프레임들을 전송 처리하는 구간을 의미한다.
+ - 트렁크를 구성하려면, IEEE 802.1q 트렁크 프로토콜을 사용해야 한다.
+ - 이때, 이더넷 프레임에 VLAN-ID 정보를 갖고 있는 dot1q Tag(4Byte)를 추가한다.
+ - 블로그 -> '@802.1q 트렁크.cap' 파일 확인
+
+                         dot1q 트렁크
+SW1[F0/24]---------------------------------[F0/24]SW2
+
+
+SW1(config)#int fa0/24
+SW1(config-if)#switchport trunk encapsulation dot1q
+SW1(config-if)#switchport mode trunk
+SW1(config-if)#end
+
+SW2(config)#int fa0/24
+SW2(config-if)#switchport trunk encapsulation dot1q
+SW2(config-if)#switchport mode trunk
+SW2(config-if)#end
+
+SW1,SW2#show run
+SW1,SW2#show int trunk
+
+
+
+6. PC IP 주소 설정
+
+ - 서로 다른 VLAN이 같은 서브넷 IP 주소를 사용하면, 네트워크 이름이 중복된다.
+ - 그렇기 때문에 서로 다른 VLAN은 서로 다른 서브넷 IP 주소를 사용해야 한다.
+ - 또한, 다른 VLAN은 다른 서브넷을 사용해야지만, 기본 게이트웨이를 각각 사용할 수 있다.
+
+ - VLAN 11 - 192.168.11.0/24
+ - VLAN 12 - 192.168.12.0/24
+ - VLAN 13 - 192.168.13.0/24
+
+
+VLAN 11 - A 192.168.11.1/24 GW 192.168.11.254
+             - C 192.168.11.3/24 GW 192.168.11.254
+
+VLAN 12 - B 192.168.12.2/24 GW 192.168.12.254
+             - D 192.168.12.4/24 GW 192.168.12.254
+
+VLAN 13 - E 192.168.13.5/24 GW 192.168.13.254
+
+
+ - 같은 VLAN 간에 Ping 테스트
+
+A>ping 192.168.11.3
+A>arp -a
+
+B>ping 192.168.12.4
+B>arp -a
+
+
+ - 서로 다른 VLAN 간에 Ping 테스트
+
+A>ping 192.168.12.4
+A>ping 192.168.13.5
+
+
+
+7. Inter-VLAN 구성 
+
+ - 각각 VLAN에 대한 기본 게이트웨이를 라우터를 이용하여 구성한다.
+ - 필요 사항 : 스위치 트렁크 구성, 라우터 서브-인터페이스 & 트렁크
+
+                                (dot1q)
+R1[F0/0]------------------------------------------------[F0/10]SW1
+
+    F0/0.11 (vlan 11 dot1q) 192.168.11.254
+    F0/0.12 (vlan 12 dot1q) 192.168.12.254
+    F0/0.13 (vlan 13 dot1q) 192.168.13.254
+
+
+ - SW1 F0/10 트렁크 설정
+
+SW1(config)#int fa0/10
+SW1(config-if)#switchport trunk encapsulation dot1q
+SW1(config-if)#switchport mode trunk
+SW1(config-if)#end
+
+SW1#show run
+
+
+ - R1 F0/0 서브-인터페이스를 이용한 VLAN 게이트웨이 및 트렁크 설정
+
+R1#conf t
+R1(config)#int fa0/0
+R1(config-if)#no shutdown
+R1(config-if)#
+R1(config-if)#int fa0/0.11
+R1(config-subif)#encapsulation dot1q 11
+R1(config-subif)#ip address 192.168.11.254 255.255.255.0
+R1(config-subif)#
+R1(config-subif)#int fa0/0.12
+R1(config-subif)#encapsulation dotq 12
+R1(config-subif)#ip address 192.168.12.254 255.255.255.0
+R1(config-subif)#
+R1(config-subif)#int fa0/0.13
+R1(config-subif)#encapsulation dotq 13
+R1(config-subif)#ip address 192.168.13.254 255.255.255.0
+R1(config-subif)#end
+
+R1#show run
+R1#show ip route
+R1#show int fa0/0.11
+R1#show int fa0/0.12
+R1#show int fa0/0.13
+
+SW1#show int trunk
+
+
+8. Inter-VLAN 구성 확인
+
+ - Inter-VLAN을 구성하면, 각 VLAN PC들은 인터넷이 가능하다.
+ - 하지만, R1(라우터) 라우팅 기능때문에 서로 다른 VLAN 간에도 유니케스트가 가능해진다.
+ - 만약, 서로 다른 VLAN 간에 유니케스트를 차단하려면, R1에서 ACL를 구성해야 한다.
+
+E>ping 192.168.11.1    <- A
+E>ping 192.168.11.3    <- C
+E>ping 192.168.12.2    <- B
+E>ping 192.168.12.4    <- D
+
+E>tracert 192.168.11.1
+E>tracert 192.168.11.3
+E>tracert 192.168.12.2
+E>tracert 192.168.12.4
+
+
+[참고] Voice VLAN & Native VLAN
+
+ - Voice VLAN : 스위치가 IP Phone에게 VLAN 정보를 광고할때 사용하는 VLAN 설정
+ - Native VLAN : dot1q 트렁크 포트가 Untagged 프레임을 수신하면 처리하는 VLAN(기본값 VLAN 1)
+ - Untagged 프레임 : dot1q Tag 정보(VLAN-ID)가 없는 이더넷 프레임 
+
+Ex) Voice VLAN & Native VLAN
+
+Switch[F0/1]-----------------[SW]IP Phone[PC]--------------------PC
+ 
+VLAN 101 - IP Phone
+VLAN 102 - PC
+
+vlan 101
+ name Phone
+!
+vlan 102
+ name PC
+!
+int fa0/1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 102
+ switchport voice vlan 101
+
+Switch#show int fa0/1 switchport
+Name: Fa0/1
+Switchport: Enabled
+Administrative Mode: trunk
+Operational Mode: trunk
+Administrative Trunking Encapsulation: dot1q
+Operational Trunking Encapsulation: dot1q
+Negotiation of Trunking: On
+Access Mode VLAN: 1 (default)
+Trunking Native Mode VLAN: 102
+Voice VLAN: 101
+Administrative private-vlan host-association: none
+Administrative private-vlan mapping: none
+~ 중간 생략 ~

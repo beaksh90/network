@@ -1,0 +1,81 @@
+server
+DHCP on
+192.168.1.254
+192.168.1.253
+save
+
+-------------
+A pc
+ip configuration dhcp on
+cmd 
+ipconfig /all
+ping 192.168.1.253
+
+---------------
+A pc
+ip configuration static
+
+------------------
+server
+DHCP off
+
+------------------
+ 주소정보       192.133.219.1 ~ 192.133.219.254
+서브넷 마스크    255.255.255.0
+기본 게이트 웨이 192.133.219.254
+ DNS                           25
+                            
+
+ip dhcp excluded-address 198.133.219.25
+ip dhcp excluded-address 198.133.219.254
+
+ip dhcp pool NET198
+network 192.133.219.0 255.255.255.0
+default-router 192.133.219.54
+dns-server 198.133.219.25
+
+ping 13.13.10.254
+
+
+SW1
+Vlan    Mac Address       Type        Ports
+----    -----------       --------    -----
+
+   1    0001.43ea.a46a    DYNAMIC     Fa0/2
+   1    0001.9619.038c    DYNAMIC     Fa0/24
+   1    000c.cf94.2401    DYNAMIC     Fa0/24
+   1    0030.f223.c518    DYNAMIC     Fa0/24
+   1    00e0.b049.32c6    DYNAMIC     Fa0/24
+
+SW2#show mac address-table 
+          Mac Address Table
+-------------------------------------------
+
+Vlan    Mac Address       Type        Ports
+----    -----------       --------    -----
+
+   1    0001.43ea.a46a    DYNAMIC     Fa0/24
+   1    0001.9619.038c    DYNAMIC     Fa0/22
+   1    000c.cf94.2401    DYNAMIC     Fa0/10
+   1    0010.11ea.2716    DYNAMIC     Fa0/22
+   1    0090.0cb2.8518    DYNAMIC     Fa0/24
+   1    00e0.b049.32c6    DYNAMIC     Fa0/22
+
+
+SW3#show mac address-table 
+          Mac Address Table
+-------------------------------------------
+
+Vlan    Mac Address       Type        Ports
+----    -----------       --------    -----
+
+   1    0001.43ea.a46a    DYNAMIC     Fa0/22
+   1    0001.9619.038c    DYNAMIC     Fa0/1
+   1    000c.cf94.2401    DYNAMIC     Fa0/22
+   1    0030.f223.c516    DYNAMIC     Fa0/22
+   1    00e0.b049.32c6    DYNAMIC     Fa0/2
+
+   0001.43EA.A46A
+
+
+   
