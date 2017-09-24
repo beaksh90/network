@@ -1,0 +1,187 @@
+
+
+conf t
+!
+vtp domain CISCO
+vtp password cisco 
+end
+
+show vtp status
+show vtp password
+!
+
+========== R1 =============
+en
+conf t
+!
+hostname R1
+!
+no ip domain-lookup
+!
+line con 0
+logg syn
+exec-timeout 0 0
+!
+line vty 0 4
+no login
+privilege level 15
+!
+========== R1  =============
+
+========== SW1 =============
+
+en
+conf t
+!
+hostname SW1
+!
+no ip domain-lookup
+!
+line con 0
+logg syn
+exec-timeout 0 0
+!
+line vty 0 15
+no login
+privilege level 15
+!
+int vlan 1
+ip address 192.168.100.1 255.255.255.0
+no shutdown
+!
+ip default-gateway 192.168.100.254
+========== SW1 =============
+
+========== SW2 =============
+
+en
+conf t
+!
+hostname SW2
+!
+no ip domain-lookup
+!
+line con 0
+logg syn
+exec-timeout 0 0
+!
+line vty 0 15
+no login
+privilege level 15
+!
+int vlan 1
+ip address 192.168.100.2 255.255.255.0
+no shutdown
+!
+ip default-gateway 192.168.100.254
+========== SW2 =============
+
+========== SW3 =============
+
+en
+conf t
+!
+hostname SW3
+!
+no ip domain-lookup
+!
+line con 0
+logg syn
+exec-timeout 0 0
+!
+line vty 0 15
+no login
+privilege level 15
+!
+int vlan 1
+ip address 192.168.100.3 255.255.255.0
+no shutdown
+!
+ip default-gateway 192.168.100.254
+========== SW3 =============
+
+
+------ SW1 -------- 
+vtp domain CISCO
+vtp password cisco
+vtp mode server
+------ SW1 -------- 
+
+------ SW2,3 ------ 
+vtp domain CISCO
+vtp password cisco
+vtp mode client
+------ SW2,3 ------ 
+
+------ SW1 -------- 
+int f0/1
+switchport mode access
+switchport access vlan 11
+------ SW1 -------- 
+
+------ SW2 -------- 
+int fa0/1
+switchport mode access
+switchport access vlan 12
+------ SW2 -------- 
+
+------ SW3 -------- 
+int fa0/1
+switchport mode access
+switchport access vlan 13
+------ SW3 -------- 
+
+------ R1 ---------
+int fa0/0
+no shutdown
+
+int fa0/0.11
+ encapsulation dot1q 11
+ ip add 10.1.11.254 255.255.255.0
+
+ int fa0/0.12
+  encapsulation dot1q 12
+  ip add 10.1.12.254 255.255.255.0
+
+int fa0/0.13
+ encapsulation dot1q 13
+ ip add 10.1.13.254 255.255.255.0
+
+R1
+int fa0/1
+ip nat  inside
+int fa0/0.11
+ip nat inside
+int fa0/0.12
+ip nat inside
+int fa0/0.13
+ip nat inside
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

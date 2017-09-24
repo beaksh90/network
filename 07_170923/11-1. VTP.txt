@@ -1,0 +1,192 @@
+@ CCNA 평일 - 18. VTP
+
+1. VTP(Vlan Trunk Protocol)
+
+ - Cisco 전용 프로토콜
+ - 트렁크로 연결된 스위치 간에 VLAN 정보(생성/삭제/수정)를 공유하는 기능을 수행함
+ 
+
+2. VTP 사용 조건
+
+ - 스위치 연결은 트렁크로 구성해야 한다.
+ - VTP Domain이 동일해야 한다.
+ - VTP Password가 동일해야 한다.
+ - 초기화된 스위치는 다음과 같이 트렁크, VTP Domain, VTP Password는 설정되어 있지 않다.
+
+SW1#show int trunk
+
+SW1#show vtp status
+VTP Version                     : 2
+Configuration Revision          : 0
+Maximum VLANs supported locally : 1005
+Number of existing VLANs        : 5
+VTP Operating Mode              : Server
+VTP Domain Name                 : 
+VTP Pruning Mode                : Disabled
+VTP V2 Mode                     : Disabled
+VTP Traps Generation            : Disabled
+MD5 digest                      : 0x7D 0x5A 0xA6 0x0E 0x9A 0x72 0xA0 0x3A 
+Configuration last modified by 0.0.0.0 at 0-0-00 00:00:00
+Local updater ID is 0.0.0.0 (no valid interface found)
+
+
+SW1#show vtp password
+The VTP password is not configured.
+
+
+
+3. VTP 동작 모드
+
+SW1(config)#vtp mode ?
+  client       Set the device to client mode.
+  server       Set the device to server mode.
+  transparent  Set the device to transparent mode.
+
+ 1) VTP mode server (기본 모드)
+
+ - VLAN 데이터베이스 읽기/쓰기 가능
+ - VLAN 사용 가능, VLAN 생성/삭제/수정 가능
+ - VLAN 정보 광고/일치/전달 가능
+
+ 2) VTP mode client
+
+ - VLAN 데이터베이스 읽기 가능 (쓰기 불가능)
+ - VLAN 사용 가능, VLAN 생성/삭제/수정 불가능
+ - VLAN 정보 광고 X, 일치/전달 가능
+
+ 3) VTP mode transparent (공유 X 모드)
+
+ - VLAN 데이터베이스 읽기/쓰기 가능
+ - VLAN 사용 가능, VLAN 생성/삭제/수정 가능
+ - VLAN 정보 광고/일치 X, 전달 가능
+
+
+4. VTP 공유 처리 과정
+
+SW1#show vtp status 
+VTP Version                     : 2
+Configuration Revision          : 0 <------- 이 값이 높은쪽으로 VLAN 정보가 공유됨
+Maximum VLANs supported locally : 1005 
+Number of existing VLANs        : 5
+~ 중간 생략 ~
+
+ - Configuration Revision : VLAN 데이터베이스가 변경될때 마다 '1'씩 증가되면서, VTP 메세지 광고 실시
+ - VLAN 공유 방식 : 동기화 방식
+
+
+
+'VTP 실습.pkt' 파일?
+
+ 	     dot1q trunk                                 dot1q trunk
+SW1[F0/24]-------------------[F0/24]SW2[F0/22]-------------------[F0/22]SW3
+server			   transparent			client
+
+
+
+5. 관리자 IP 주소 설정
+
+SW1(config)#int vlan 1
+SW1(config-if)#ip address 192.168.1.1 255.255.255.0
+SW1(config-if)#no shutdown
+
+SW2(config)#int vlan 1
+SW2(config-if)#ip address 192.168.1.2 255.255.255.0
+SW2(config-if)#no shutdown
+
+SW3(config)#int vlan 1
+SW3(config-if)#ip address 192.168.1.3 255.255.255.0
+SW3(config-if)#no shutdown
+
+
+6. 스위치 구간 트렁크 구성 
+
+SW1(config)#int fa0/24
+SW1(config-if)#switchport trunk encapsulation dot1q
+SW1(config-if)#switchport mode trunk
+
+SW2(config)#int range fa0/22 , fa0/24
+SW2(config-if)#switchport trunk encapsulation dot1q
+SW2(config-if)#switchport mode trunk
+
+SW3(config)#int fa0/22
+SW3(config-if)#switchport trunk encapsulation dot1q
+SW3(config-if)#switchport mode trunk
+
+
+SW1,SW2,SW3#show run
+SW1,SW2,SW3#show int trunk
+
+
+7. VTP Domain/Password/Mode 설정
+
+ - VTP Domain  : CCNA
+ - VTP Password  : cisco
+ - SW1  : server
+ - SW2  : transparent
+ - SW3  : client
+
+SW1(config)#vtp domain CCNA
+SW1(config)#vtp password cisco
+SW1(config)#vtp mode server
+
+SW2(config)#vtp domain CCNA
+SW2(config)#vtp password cisco
+SW2(config)#vtp mode transparent
+
+SW3(config)#vtp domain CCNA
+SW3(config)#vtp password cisco
+SW3(config)#vtp mode client
+
+
+SW1,SW2,SW3#show vtp status
+SW1,SW2,SW3#show vtp password
+
+
+8. SW1,SW2,SW3에서 'show vtp status'를 실시하여 'Configuration Revision' 값을 확인한다.
+
+
+9. SW1,SW2,SW3에서 'show vlan brief'를 실시하여 VLAN 데이터베이스 정보를 확인한다.
+
+
+10. SW1에서 다음과 같은 VLAN을 생성하여, 'Configuration Revision' 값과 VLAN 데이터베이스를 확인한다.
+
+SW1(config)#vlan 11
+SW1(config-vlan)#name VLAN_A
+SW1(config-vlan)#vlan 12
+SW1(config-vlan)#name VLAN_B
+SW1(config-vlan)#vlan 13
+SW1(config-vlan)#name VLAN_C
+SW1(config-vlan)#end
+
+SW1#show vtp status
+SW1#show vlan brief
+
+
+11. SW2에서 'Configuration Revision' 값과 VLAN 데이터베이스를 확인한다.
+
+SW2#show vtp status
+SW2#show vlan brief
+
+
+12. SW3에서 'Configuration Revision' 값과 VLAN 데이터베이스를 확인한다.
+
+SW3#show vtp status
+SW3#show vlan brief
+
+
+13. SW2에서 다음과 같은 VLAN을 생성하여, 'Configuration Revision' 값과 VLAN 데이터베이스를 확인한다.
+
+SW2(config)#vlan 100
+SW2(config-vlan)#name VLAN_X
+SW2(config-vlan)#vlan 200
+SW2(config-vlan)#name VLAN_Y
+SW2(config-vlan)#end
+
+SW2#show vtp status
+SW2#show vlan brief
+
+
+14. SW1, SW3에서 VLAN 데이터베이스를 확인한다.
+
+SW1,SW3#show vlan brief
+
