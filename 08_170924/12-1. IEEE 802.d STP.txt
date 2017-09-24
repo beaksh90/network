@@ -1,0 +1,234 @@
+Lan Switching - 04. IEEE 802.1d STP
+
+
+1. STP 실습 준비
+
+ - 블로그 -> '@IEEE 802.1d STP.pkt' 파일 실행
+
+SW1(config)#int range fa0/20 , fa0/24
+SW1(config-if-range)#switchport trunk encapsulation dot1q
+SW1(config-if-range)#switchport mode trunk
+
+SW2(config)#int range fa0/22 , fa0/24
+SW2(config-if-range)#switchport trunk encapsulation dot1q
+SW2(config-if-range)#switchport mode trunk
+
+SW3(config)#int range fa0/20 , fa0/22
+SW3(config-if-range)#switchport trunk encapsulation dot1q
+SW3(config-if-range)#switchport mode trunk
+
+SW1,SW2,SW3#show int trunk
+
+
+
+2. 이중화 링크 필요성
+
+ - LAN 네트워크 설계시 장애 발생가 발생할 경우, 다른 링크를 이용하여 패켓 전송이 가능하도록 하는 것을 권장한다.
+ - 대신, 이중화 링크를 구현하면 브리징 루프가 발생되는 문제가 있다.
+ - 브리징 루프 : 브로드케스트 스톰, MAC 플랩핑, 유니케스트 중복 복제
+ - 브리징 루프 발생 원인 : 이중화 링크, 스위치 플러딩 동작
+ - 브리징 루프 방지 대책 : 스위치 특정 포트를 논리적으로 차단(Blocking)시킴
+ - Blocking 포트 : 프레임 송수신이 불가능한 포트를 의미한다.
+
+   ① Blocking 포트는 평상시에 프레임 송수신이 차단된다. 
+   ② 그러나 사용중인 링크가 장애가 발생하면, Blocking 포트는 Forwarding 상태로 전환하여 프레임 송수신이 가능해진다.
+   ③ 또한, 링크 장애가 복구되면, 다시 Blocking 상태로 전환된다.
+
+ - ①, ②, ③ 동작을 담당하는 프로토콜 : STP
+
+
+
+3. STP(Spanning-Tree Protocol)
+
+ - IEEE 802.1d Spanning-Tree Protocol
+ - 이중화 링크에서 발생하는 브리징 루프를 방지하는 기능을 수행한다.
+ - BPDU 메세지를 이용하여 모니터링을 실시하여 장애 발생 및 복구를 주기적으로 감시한다.
+ 
+
+4. STP 파라메터 값
+
+ - 브리지 아이디, Cost, Port-ID는 STP가 특정 포트를 Blocking 할때, 사용하는 값들이다.
+
+ 1) 브리지 아이디
+
+ - 스위치 식별자 = 64bit (우선 순위 16bit + MAC 주소 48bit)
+ - 우선 순위 기본값 : 32768
+
+ 2) Cost
+
+ - 스위치와 스위치간에 연결된 링크 메트릭
+
+인터페이스/포트 이름  BW      Cost
+ 
+Ethernet                   ??10M      100
+FastEthernet              ?100M      19
+GigaEthernet             1000M      4
+10GigaEthernet          ???10000M    ?2
+
+
+Ex) SW3에서 SW1까지 Cost 값은 얼마인가? 38
+
+SW1[F0/24]-------------------[F0/24]SW2[F0/22]-------------------[F0/22]SW3
+
+
+ 3) Port-ID (Port-Priority)
+
+ - 포트 번호
+ - 기본값 : 128.포트 번호
+
+Ex) F0/24 -> 128.24
+
+
+
+5. STP 포트 유형
+
+ - Designated Port/DP : BPDU 송신 포트
+ - Root Port/RP  : BPDU 수신 포트
+
+Ex) DP                              RP
+       BPDU ->          BPDU -> 
+
+
+6. STP 정보 확인
+
+SW1#show spanning-tree vlan 1
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     0001.9608.DC2A
+             This bridge is the root
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     0001.9608.DC2A
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/20           Desg FWD 19        128.20   P2p
+Fa0/24           Desg FWD 19        128.24   P2p
+Fa0/1            Desg FWD 19        128.1    P2p
+
+SW3#show spanning-tree vlan 1
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     0001.9608.DC2A
+             Cost        19
+             Port        20(FastEthernet0/20)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     000C.85D0.6076
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/1            Desg FWD 19        128.1    P2p
+Fa0/20           Root FWD 19        128.20   P2p
+Fa0/22           Desg FWD 19        128.22   P2p
+
+SW2#show spanning-tree vlan 1
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     0001.9608.DC2A
+             Cost        19
+             Port        24(FastEthernet0/24)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     0030.A383.1759
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/1            Desg FWD 19        128.1    P2p
+Fa0/22           Altn BLK 19        128.22   P2p
+Fa0/24           Root FWD 19        128.24   P2p
+
+
+
+7. STP를 이용한 포트 Blocking 과정
+
+ 1) 루트 브리지 선출
+
+ - 브리지 아이디의 우선 순위가 가장 낮은 스위치
+ - 브리지 아이디의 MAC 주소가 가장 낮은 스위치
+
+ 2) DP/RP
+
+ - DP : BPDU 송신 포트
+ - RP : BPDU 수신 포트
+ - 루트 브리지에서 BPDU 송신이 시작되기 때문에 Root Bridge 포트가 DP로 선정됨
+ - RP는 루트 브리지까지 Cost 값이 가장 낮은 스위치 포트로 선정됨
+
+ 3) Blocking 포트
+
+ - 루트 브리지까지 Cost이 높은 스위치 포트
+ - Bridge-ID 값이 높은 스위치 포트 
+ - 상대방 포트 아이디가 높은 포트에 연결된 스위치 포트
+
+
+8. Blocking 포트
+
+ - Blocking 포트는 프레임 송수신이 안된다.
+ - Blocking 포트는 BPDU 송신이 안된다.
+ - 단, Blocking 포트는 BPDU 수신은 가능하다.
+ 
+SW2[F0/22]-------------------------[F0/22]SW3
+       Blocking       DP
+       BPDU 수신 가능
+
+       프레임 송수신 X
+       BPDU 송신 X
+
+
+9. STP 루트 브리지 및 Blocking 수동 설정
+
+ - Root Bridge   : SW2
+ - Backup Root Bridge : SW3
+ - Non Root Bridge   : SW1 (F0/20 BLK)
+ 
+SW2(config)#spanning-tree vlan 1 priority 4096		// spanning-tree vlan 1 root primary
+
+SW3(config)#spanning-tree vlan 1 priority 16384		// spanning-tree vlan 1 root secondary
+
+
+ - 설정하고 30초 이후에 확인 실시
+
+SW2#show spanning-tree vlan 1 <- This bridge is the root
+
+SW1#show spanning-tree vlan 1 <- F0/20 BLK
+
+
+
+10. STP 타이머
+
+ - Hello 타이머  : BPDU 전송 주기, 기본값 2초
+ - Forward Delay 타이머 : 스위치 포트가 Forwarding 상태로 전환되는데 필요한 시간, 기본값 15초
+ - Max Age 타이머  : Blocking 포트로 새로운 BPDU를 수신하면, 기존의 BPDU랑 비교하는 시간, 기본값 20초
+
+
+11. STP 포트 상태
+
+ - Disable  : 포트 비활성화 상태(shutdown, 케이블 연결 X)
+
+ - Blocking : 브리징 루프를 방지하기 위해서 포트를 논리적으로 차단한 상태
+                프레임 송수신 X, BPDU 송신 X
+                단, BPDU 수신 O
+
+ - Listening : 포트가 동작하기 위한 준비 단계
+                 루트 브리지까지 Cost 값 계산
+                 DP 선정/RP 선정 결정
+                 Forward Delay 타이머 적용 (15초)
+
+ - Learning : MAC 주소 단계
+                 Forward Delay 타이머 적용 (15초)
+
+ - Forwarding : 프레임 송수신 가능 상태
+
+ - IEEE 802.1d STP는 컨버전스가 30초, 50초라는 지연이 있기 때문에 현재 내부망에서는 권장하지 않는다.

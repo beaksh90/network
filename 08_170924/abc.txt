@@ -1,0 +1,11 @@
+1. Root Bridge 선출
+- 우선순위 값이 가장 낮은 스위치
+- MAC주소 값이 가장 낮은 스위치
+
+2.   DP/ RP
+- DP BPDU 송신포트
+- RP BPDU 수신포트
+
+3. BLK 선출
+- Root Path Cost 높은 스위치
+- Bridge-ID가 높은 스위치
