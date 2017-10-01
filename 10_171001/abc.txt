@@ -1,0 +1,100 @@
+
+SW1
+en
+conf t
+int range fa0/24, fa0/23
+    sw tr en do
+    sw mo tr
+
+SW2
+en
+conf t
+int range fa0/24, fa0/23, fa0/21, fa0/22
+    sw tr en do
+    sw mo tr
+
+SW3
+en
+conf t
+int range fa0/21, fa0/22
+    sw tr en do
+    sw mo tr
+
+SW 1 - 3
+sw ac vlan 11
+
+SW 3
+int range fa0/1 - 2
+sw mo ac
+sw ac vl 11
+
+
+SW 1 - 2
+
+
+
+SW2(config-vlan)#int port-channel 12
+SW2(config-if)#sw tr en dot1q 
+SW2(config-if)#sw mo tr
+SW2(config-if)#int range fa0/23 - 24
+SW2(config-if-range)#channel-protocol pagp
+SW2(config-if-range)#channel-group 12 mode desirable
+
+
+show eth su
+
+SW 2 -3
+
+SW2(config)#int port-channel 23
+SW2(config-if)#sw tr en do
+SW2(config-if)#sw mo tr
+SW2(config-if)#int range fa0/21 - 22
+SW2(config-if-range)#channel-protocol lacp	
+SW2(config-if-range)#channel-group 23 mode active
+
+
+show int port 23
+
+
+SW3(config)#int port-channel 11
+SW3(config-if)#sw mo ac
+SW3(config-if)#sw ac vl 11
+SW3(config-if)#int range fa0/1-2
+SW3(config-if-range)#channel-group 11 mode on
+
+linux - 본딩, Windows - 티밍
+
+
+no int port-channel 12
+no int port-channel 23
+default int fa0/21
+default int fa0/22
+default int fa0/23
+default int fa0/24
+
+no int port-channel 23
+default int fa0/21
+default int fa0/22
+
+int range fa0/21 - 24
+sh
+no sh
+
+
+SW 1 - 3 
+int port-channel 12
+no switchport
+ip address 13.13.12.1 255.255.255.0
+
+int range fa0/23 - 24
+no switchport
+channel-group 12 mode on
+
+
+
+
+
+
+
+
+
