@@ -1,0 +1,29 @@
+en
+conf t
+hostname R1
+!
+no ip domain-lookup
+!
+line con 0
+exec-timeout 0 0
+logg syn
+!
+line vty 0 4
+no login
+privilege level 15
+
+
+access-list 10 permit 10.0.0.0 0.255.255.255
+access-list 10 permit 192.168.100.0 0.0.0.255
+!
+ip nat inside source list 10 interface fa0/1
+!
+int fa0/1
+ip address 192.168.1.205 255.255.255.0
+ip nat outside
+no shutdown
+!
+int fa0/0
+ip nat inside
+!
+ip route 0.0.0.0 0.0.0.0 192.168.1.1

@@ -1,0 +1,197 @@
+SVI ( Switch Vlan Interface)
+
+vlan 11 192.168.11.254
+vlan 12 192.168.12.254
+vlan 13 192.168.13.254
+
+-----------------------------------
+
+SW1(config)#int fa0/10
+SW1(config-if)#ip address 61.42.166.2 255.255.255.0
+                  ^
+% Invalid input detected at '^' marker.
+
+L2 포트라 아이피설정이 불가하다?
+
+SW1(config-if)#no switchport
+
+SW1(config-if)#ip address 61.42.166.2 255.255.255.0
+
+
+----------- VLAN11 ~ 14 -----------
+
+SW1(config-if)#ip dhcp pool VLAN11
+SW1(dhcp-config)#network 192.168.11.0 255.255.255.0
+SW1(dhcp-config)#default-router 192.168.11.254
+SW1(dhcp-config)#dbs-server 168.126.63.1
+SW1(config-if)#ip dhcp pool VLAN12
+SW1(dhcp-config)#network 192.168.12.0 255.255.255.0
+SW1(dhcp-config)#default-router 192.168.12.254
+SW1(dhcp-config)#dbs-server 168.126.63.1
+ip dhcp pool VLAN13
+network 192.168.13.0 255.255.255.0
+default-router 192.168.13.254
+dns-server 168.126.63.1
+ip dhcp pool VLAN14
+network 192.168.14.0 255.255.255.0
+default-router 192.168.14.254
+dns-server 168.126.63.1
+
+
+-------- SW 1 -------
+1. 초기화 및 기본 설정
+2. 트렁크
+3. VLAN 생성
+4. VLAN Access
+
+5. IEEE 802.1w RSTP
+6. Portfast
+7. PVST
+
+8. L2 Etherchannel
+---------------------
+------- SW 2 --------
+9. SW2 SVI 인터페이스 및 ip routing 실시
+10. SW2 F0/10 Routed Interface 구성
+
+ip route 0.0.0.0 0.0.0.0 61.42.166.1
+
+-------- R1 ---------
+ip route 0.0.0.0 0.0.0.0 192.168.1.1
+
+
+2번 L3 가 게이트웨이이기때매
+192.168.100.254 -> 192.168.100.2
+ip default-gateway 192.168.100.2
+
+
+
+
+------------------SW1 --------------------
+en
+conf t
+hostname SW1
+no ip domain-lookup
+!
+line con 0
+exec-timeout 0 0
+logg syn
+!
+line vty 0 15
+no login
+privilege level 15
+!
+int vlan 1
+ip address 192.168.100.1 255.255.255.0
+no shutdown
+!
+ip default-gateway 192.168.100.2
+int range fa0/19 - 24
+switchport trunk encapsulation dot1q
+switchport mode trunk
+
+
+------------------SW2 --------------------
+en
+conf t
+hostname SW2
+no ip domain-lookup
+!
+line con 0
+exec-timeout 0 0
+logg syn
+!
+line vty 0 15
+no login
+privilege level 15
+!
+int vlan 1
+ip address 192.168.100.2 255.255.255.0
+no shutdown
+!
+ip default-gateway 192.168.100.2
+int range fa0/21 - 24
+switchport trunk encapsulation dot1q
+switchport mode trunk
+
+
+
+------------------SW3 --------------------
+en
+conf t
+hostname SW3
+no ip domain-lookup
+!
+line con 0
+exec-timeout 0 0
+logg syn
+!
+line vty 0 15
+no login
+privilege level 15
+!
+int vlan 1
+ip address 192.168.100.3 255.255.255.0
+no shutdown
+!
+ip default-gateway 192.168.100.2
+int range fa0/19 - 22
+switchport trunk encapsulation dot1q
+switchport mode trunk
+
+==========================
+실습예제 3
+
+int vlan244 할당
+
+vtp domain CCNP
+!
+vlan 144
+vlan 244
+vlan 344
+vlan 444
+end	
+
+
+int vlan 444
+ ip address 124.243.35.9 255.255.255.240
+
+
+ vlan 91
+ vlan 191
+ vlan 291
+ vlan 391
+
+
+
+--------------- SW 2/3 --------------
+ ip routing
+ int vlan 91 
+ ip add 124.243.22.83 255.255.255.192
+
+ int vlan 191 
+ ip add 124.243.32.183 255.255.255.240
+
+ip route 0.0.0.0 0.0.0.0 124.243.32.179
+
+--------------- SW 4/5 --------------
+ ip routing
+ int vlan 191 
+ ip add 124.243.32.179 255.255.255.240
+
+ int vlan 291 
+ ip add 124.243.22.53 255.255.255.240
+
+
+ip route 0.0.0.0 0.0.0.0 124.243.22.51
+ip route  124.243.22.64 255.255.255.192  124.243.32.183
+--------------- SW 6/7 --------------
+ ip routing
+ int vlan 291 
+ ip add 124.243.22.51 255.255.255.240
+
+ int vlan 391 
+ ip add 198.133.219.254 255.255.255.0
+
+ 
+ip route 124.243.22.64 255.255.255.192 124.243.22.53

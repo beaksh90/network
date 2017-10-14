@@ -1,0 +1,7 @@
+conf t
+!
+vtp mode server
+no vlan 2-1000
+end
+!
+
