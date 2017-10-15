@@ -1,0 +1,11 @@
+1. 초기화 및 기본설정
+2. 트렁크 + 이더채널 +  RSTP
+3. VLAN
+4. VLAN Access + Portfast
+
+5. ip routing + SVI
+6. routed Interface
+7. SW7/8  정적기본경로
+8. R1/R2 NAT 설정 & 정적기본경로
+
+게이트웨이는 의미가 없다는~
