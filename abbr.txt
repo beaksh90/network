@@ -1,8 +1,17 @@
-fa : fastEthernet
+F1/0 : fa : fastEthernet (lan 연결 )
 lacp : Link Aggregation Control Protocol
 rapid-pvst : Per VLAN Spanning Tree
+RTSP : Real Time Streaming Protocol
 SVI : Switch Vlan Interface
 AWS
 DWS
 L2 :
 L3 : 
+S1/0 : serial  ( wan 연결)
+
+
+HSRP : Hot Standby Router Protocol (07ac)
+vvrp : Virtual Router Redundancy Protocol (5e00)
+
+
+

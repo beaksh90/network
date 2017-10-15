@@ -1,0 +1,236 @@
+@ R1
+
+en
+conf t
+!
+no ip domain-lookup
+!
+enable secret cisco
+!
+hostname R1
+!
+line con 0
+ logging syn
+ exec-timeout 0 0
+ password cisco
+ login
+!
+line vty 0 4
+ password cisco
+ login
+!
+int lo 0 
+ ip add 13.13.1.1 255.255.255.0
+!
+int fa0/1
+ description ### VLAN 11 Default-Gateway ###
+ ip add 150.1.13.1 255.255.255.0
+ speed 100
+ duplex full
+ no shutdown
+!
+int s1/0
+ ip add 13.13.9.1 255.255.255.0
+ encapsulation frame-relay
+ no frame-relay inverse-arp
+ frame-relay map ip 13.13.9.2 102 broadcast
+ frame-relay map ip 13.13.9.3 102 broadcast
+ ip hello-interval eigrp 100 5
+ ip hold-time eigrp 100 15
+ no shutdown
+!
+router eigrp 100
+ no auto-summary
+ network 13.0.0.0
+ network 150.1.0.0
+ end
+!
+
+@ R2
+
+en
+conf t
+!
+no ip domain-lookup
+!
+enable secret cisco
+!
+hostname R2
+!
+line con 0
+ logging syn
+ exec-timeout 0 0
+ password cisco
+ login
+!
+line vty 0 4
+ password cisco
+ login
+!
+int lo 0 
+ ip add 13.13.2.2 255.255.255.0
+!
+int fa0/1
+ ip add 13.13.12.2 255.255.255.0
+ no shutdown
+!
+int s1/0
+ encapsulation frame-relay
+ no frame-relay inverse-arp
+ no shutdown
+!
+int s1/0.123 multipoint
+ ip add 13.13.9.2 255.255.255.0
+ frame-relay map ip 13.13.9.1 201 broadcast
+ frame-relay map ip 13.13.9.3 203 broadcast
+ no ip split-horizon eigrp 100
+ ip hello-interval eigrp 100 5
+ ip hold-time eigrp 100 15
+!
+router eigrp 100
+ no auto-summary
+ network 13.0.0.0
+ end
+!
+
+@ R3
+
+en
+conf t
+!
+no ip domain-lookup
+!
+enable secret cisco
+!
+hostname R3
+!
+line con 0
+ logging syn
+ exec-timeout 0 0
+ password cisco
+ login
+!
+line vty 0 4
+ password cisco
+ login
+!
+int lo 0 
+ ip add 13.13.3.3 255.255.255.0
+!
+int fa0/1
+ description ### VLAN 11 Default-Gateway ###
+ ip add 150.1.13.3 255.255.255.0
+ speed 100
+ duplex full
+ no shutdown
+!
+int s1/0
+ ip add 13.13.9.3 255.255.255.0
+ encapsulation frame-relay
+ no frame-relay inverse-arp
+ frame-relay map ip 13.13.9.2 302 broadcast
+ frame-relay map ip 13.13.9.1 302 broadcast
+ ip hello-interval eigrp 100 5
+ ip hold-time eigrp 100 15
+ no shutdown
+!
+router eigrp 100
+ no auto-summary
+ network 13.0.0.0
+ network 150.1.0.0
+ end
+!
+
+@ R4
+
+en
+conf t
+!
+no ip domain-lookup
+!
+hostname R4
+!
+line con 0
+ logging syn
+ exec-timeout 0 0
+ password cisco
+ login
+!
+line vty 0 4
+ password cisco
+ login
+!
+int fa0/1
+ ip address 150.1.13.4 255.255.255.0
+ speed 100
+ duplex full
+ no shutdown
+!
+ip route 0.0.0.0 0.0.0.0 150.1.13.254
+end
+!
+
+
+@ R5
+
+en
+conf t
+!
+no ip domain-lookup
+!
+hostname R5
+!
+line con 0
+ logging syn
+ exec-timeout 0 0
+ password cisco
+ login
+!
+line vty 0 4
+ password cisco
+ login
+!
+int fa0/1
+ ip add 150.1.13.5 255.255.255.0
+ speed 100
+ duplex full
+ no shutdown
+!
+ip route 0.0.0.0 0.0.0.0 150.1.13.253
+end
+!
+
+
+@ SW1
+
+en
+conf t
+!
+no ip domain-lookup
+!
+hostname SW1
+!
+line con 0
+ logging syn
+ exec-timeout 0 0
+ password cisco
+ login
+!
+line vty 0 4
+ password cisco
+ login
+ end
+!
+vlan database
+ vlan 11
+ exit
+!
+conf t
+int range fa1/1 , fa1/3 - 5
+ switchport mode access
+ switchport access vlan 11
+ speed 100
+ duplex full
+ end
+!
+

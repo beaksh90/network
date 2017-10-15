@@ -8,4 +8,85 @@
 7. SW7/8  정적기본경로
 8. R1/R2 NAT 설정 & 정적기본경로
 
-게이트웨이는 의미가 없다는~
+게이트웨이는 의미가 없다는~ 
+
+\\192.168.1.254\01_강의 파일(공유)\306_시스코\다이나밉스 실습
+ 다이나밉스 서버.bat 실행
+ CCNP 실행
+ $list
+ $start R1
+ $start R2
+ $start R3
+ $start R4
+ $start R5
+ $start SW1
+
+ 원격터미널로 붙고~
+
+@ R1 
+
+ int fa0/1
+ standby 1 ip 150.1.13.254
+ standby 1 priority 120
+ standby 1 preempt
+
+ standby 2 ip 150.1.13.253
+ standby 2 preempt
+
+@ R3
+
+ int fa0/1
+ standby 1 ip 150.1.13.254
+ standby 1 preempt
+
+ standby 2 ip 150.1.13.253
+ standby 2 standby priority
+ standby 2 pree
+ standby 2 track s1/0 30
+
+R1(config)#do show stan br
+                   P indicates configured to preempt.
+                   |
+Interface Grp  Pri P State   Active          Standby         Virtual IP
+Fa0/1     1    120 P Active  local           150.1.13.3      150.1.13.254
+
+
+ Active virtual MAC address is 0000.0c07.ac01
+        <cisco - 0000.0c>, <HSRP라우터 - 07.ac>, 01 <-- group_num
+
+
+standby 1 track s1/0 30
+
+@R1
+default int fa0/1   ## default 를 쓰게 되면 기존의 설정이 사라진다
+
+int fa0/1
+ip add 150.1.13.1 255.255.255.0
+speed 100
+duplex full
+
+@R3
+default int fa0/1
+
+int fa0/1
+ip add 150.1.13.3 255.255.255.0
+speed 100
+duplex full
+
+
+
+@R1 
+
+track 13 interface s1/0 line-protocol
+!
+int fa0/1
+ vrrp 1 ip 150.1.13.254
+ vrrp 1 priority 120
+ vrrp 1 preempt
+ vrrp 1 track 13 decrement 30
+!
+
+@R3
+int fa0/1 
+vrrp 1 ip 150.1.13.254
+vrrp 1 preempt
